@@ -10,8 +10,47 @@ import altair as alt
 st.set_page_config(page_title="Controle de Peças QR", layout="wide")
 
 # ==================== BANCO DE DADOS ====================
+# ==================== BANCO DE DADOS (VERSÃO ROBUSTA PARA CLOUD) ====================
 conn = sqlite3.connect("pecas.db", check_same_thread=False)
 c = conn.cursor()
+
+# Tabela de usuários
+c.execute('''CREATE TABLE IF NOT EXISTS users (
+             id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT, 
+             funcao TEXT, funcao_custom TEXT)''')
+
+# Tabela de peças (com todas as colunas necessárias)
+c.execute('''CREATE TABLE IF NOT EXISTS pecas (
+             qr_code TEXT PRIMARY KEY,
+             tipo_peca TEXT,
+             cor_atual TEXT,
+             status TEXT,
+             etapa TEXT,
+             responsavel TEXT,
+             data_cadastro TEXT,
+             resultado TEXT,
+             data_conclusao TEXT,
+             responsavel_conclusao TEXT)''')
+
+# Migração automática de colunas (caso o banco antigo falte alguma coluna)
+columns_pecas = [row[1] for row in c.execute("PRAGMA table_info(pecas)").fetchall()]
+for col in ['resultado', 'data_conclusao', 'responsavel_conclusao']:
+    if col not in columns_pecas:
+        c.execute(f"ALTER TABLE pecas ADD COLUMN {col} TEXT")
+
+# Tabela de histórico
+c.execute('''CREATE TABLE IF NOT EXISTS historico (
+             id INTEGER PRIMARY KEY,
+             qr_code TEXT,
+             tipo_peca TEXT,
+             etapa TEXT,
+             cor TEXT,
+             status TEXT,
+             responsavel TEXT,
+             data TEXT,
+             observacao TEXT)''')
+
+conn.commit()
 
 c.execute('''CREATE TABLE IF NOT EXISTS users (
              id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT, 
