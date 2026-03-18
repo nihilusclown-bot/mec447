@@ -46,6 +46,16 @@ c.execute('''CREATE TABLE IF NOT EXISTS historico (
 
 conn.commit()
 
+# ==================== USUÁRIO ADMIN AUTOMÁTICO ====================
+c.execute("SELECT nome FROM users WHERE nome='admin'")
+if not c.fetchone():
+    c.execute("""INSERT INTO users 
+                 (nome, email, senha, funcao, funcao_custom) 
+                 VALUES (?,?,?,?,?)""",
+              ("admin", None, "mec347", "Administrador", None))
+    conn.commit()
+    print("✅ Usuário admin criado automaticamente (senha: mec347)")  
+  
 # ==================== PÁGINA PÚBLICA VIA QR CODE (SEM LOGIN) ====================
 query_params = st.query_params
 if "qr_code" in query_params:
