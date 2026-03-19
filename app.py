@@ -56,7 +56,7 @@ if not c.fetchone():
     conn.commit()
     print("✅ Usuário admin criado automaticamente (senha: mec347)")  
   
-# ==================== PÁGINA PÚBLICA VIA QR CODE (SEM LOGIN) ====================
+# ==================== PÁGINA PÚBLICA VIA QR CODE ====================
 query_params = st.query_params
 if "qr_code" in query_params:
     qr = query_params["qr_code"]
@@ -92,7 +92,7 @@ if "qr_code" in query_params:
         st.error("❌ Peça não encontrada.")
         st.stop()
 
-# ==================== SESSÃO E LOGIN (VERSÃO FINAL CORRIGIDA) ====================
+# ==================== SESSÃO E LOGIN ====================
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -330,13 +330,18 @@ if menu == "➕ Cadastrar Nova Peça":
         submitted = st.form_submit_button("Cadastrar Peça")
         
         if submitted:
-            qr_code = f"PECA-{datetime.now().strftime('%Y%m%d%H%M%S')}"   # ← agora com segundos (mais seguro)
+            qr_code = f"PECA-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             agora = datetime.now().strftime("%d/%m/%Y %H:%M")
             desenho_bytes = desenho.read() if desenho else None
             
-            c.execute("INSERT INTO pecas VALUES (?,?,?,?,?,?,?,?,?,?)",
+            # ✅ CORRIGIDO: agora com 11 colunas (incluindo cor_atual)
+            c.execute("""INSERT INTO pecas 
+                         (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
+                          data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                       (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
-                       responsavel_selecionado, agora, None, None, desenho_bytes))
+                       responsavel_selecionado, agora, None, None, None, desenho_bytes))
+            
             c.execute("""INSERT INTO historico 
                          (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
                          VALUES (?,?,?,?,?,?,?,?)""",
