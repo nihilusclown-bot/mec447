@@ -282,42 +282,40 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    # Canvas ainda maior
     img = Image.new("RGB", (2600, 1400), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    # FONTES GIGANTES (agora vai aparecer!)
+    # FONTES GIGANTES (para você ver a diferença imediatamente)
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 170)   # Nº
-        font_normal = ImageFont.truetype("arial.ttf", 105)   # linhas principais
-        font_status = ImageFont.truetype("arial.ttf", 78)    # status
+        font_titulo = ImageFont.truetype("arial.ttf", 200)
+        font_normal = ImageFont.truetype("arial.ttf", 120)
+        font_status = ImageFont.truetype("arial.ttf", 90)
     except:
         font_titulo = ImageFont.load_default()
         font_normal = ImageFont.load_default()
         font_status = ImageFont.load_default()
     
-    # QR Code grande
-    qr_img = criar_qr_pil(qr_code).resize((680, 680), Image.LANCZOS)
+    qr_img = criar_qr_pil(qr_code).resize((720, 720), Image.LANCZOS)
     img.paste(qr_img, (1750, 350))
     
-    # Sombra forte + texto preto
-    def texto(x, y, texto, font):
+    def texto(x, y, texto, font, cor="black"):
         draw.text((x+6, y+6), texto, font=font, fill="#111111")
-        draw.text((x, y), texto, font=font, fill="black")
+        draw.text((x, y), texto, font=font, fill=cor)
     
-    # Layout completo + TEXTO DE TESTE GIGANTE
     texto(120, 120, f"Nº: {qr_code}", font_titulo)
-    texto(120, 280, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 500, f"Responsável: {responsavel}", font_normal)
-    texto(120, 610, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 420, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 540, f"Responsável: {responsavel}", font_normal)
+    texto(120, 660, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 720, f"Status atual: {status_texto}", font_status)
-    texto(120, 830, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 780, f"Status atual: {status_texto}", font_status)
+    texto(120, 900, f"Atualizado por: {atualizado_por}", font_normal)
     
-    # TEXTO DE TESTE PARA CONFIRMAR QUE A NOVA VERSÃO ESTÁ RODANDO
-    texto(120, 950, "TESTE - FONTE GRANDE (AGORA VAI APARECER!)", font_titulo)
+    # TEXTO DE TESTE GIGANTE E VERMELHO (para confirmar que a nova versão carregou)
+    draw.text((120, 1050), "TESTE - FONTE GIGANTE (SE APARECER, DEU CERTO!)", 
+              font=ImageFont.truetype("arial.ttf", 140) if "arial.ttf" in globals() else ImageFont.load_default(), 
+              fill="red")
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
