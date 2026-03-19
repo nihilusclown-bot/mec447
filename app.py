@@ -358,7 +358,8 @@ if menu == "➕ Cadastrar Nova Peça":
             st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**")
             st.session_state.last_pdf = qr_code
             st.rerun()
-        
+    
+    # ==================== DOWNLOAD DA ETIQUETA (ÚNICO E COM FONTE GRANDE) ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
