@@ -293,21 +293,23 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
     
-    # Sombra simples e forte
+    # Simulação de fonte grande e grossa (desenhando várias vezes)
     def texto(x, y, texto, font):
-        draw.text((x+6, y+6), texto, font=font, fill="#111111")
+        for dx in range(-6, 7):
+            for dy in range(-6, 7):
+                draw.text((x + dx, y + dy), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Fontes gigantes e espaçadas
+    # Layout com letras grandes e legíveis
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 310, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 430, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 550, f"Responsável: {responsavel}", font_normal)
-    texto(120, 670, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 580, f"Responsável: {responsavel}", font_normal)
+    texto(120, 710, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 790, f"Status atual: {status_texto}", font_status)
-    texto(120, 910, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 840, f"Status atual: {status_texto}", font_status)
+    texto(120, 970, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
