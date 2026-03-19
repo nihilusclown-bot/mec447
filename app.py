@@ -271,13 +271,6 @@ def criar_qr_pil(qr_code):
     qr.make(fit=True)
     return qr.make_image(fill_color="black", back_color="white")
 
-def criar_qr_bytes(qr_code):
-    img = criar_qr_pil(qr_code)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf.getvalue()
-
 def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastro, 
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
@@ -285,35 +278,30 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     img = Image.new("RGB", (2800, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    # Fonte do sistema do servidor (sempre disponível e grande)
-    try:
-        font_titulo = ImageFont.truetype("DejaVuSans.ttf", 190)
-        font_normal = ImageFont.truetype("DejaVuSans.ttf", 115)
-        font_status = ImageFont.truetype("DejaVuSans.ttf", 85)
-    except:
-        font_titulo = ImageFont.load_default()
-        font_normal = ImageFont.load_default()
-        font_status = ImageFont.load_default()
+    # Usa apenas a fonte padrão do servidor (sempre disponível)
+    font = ImageFont.load_default()
     
     # QR Code grande
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
     
-    # Sombra simples e forte
-    def texto(x, y, texto, font):
-        draw.text((x+6, y+6), texto, font=font, fill="#111111")
+    # Simula fonte grande e grossa (desenhando várias vezes)
+    def texto(x, y, texto):
+        for dx in range(-8, 9):
+            for dy in range(-8, 9):
+                draw.text((x + dx, y + dy), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Layout com letras grandes
-    texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 520, f"Responsável: {responsavel}", font_normal)
-    texto(120, 630, f"Data de cadastro: {data_cadastro}", font_normal)
+    # Layout completo que você pediu
+    texto(120, 140, f"Nº: {qr_code}")
+    texto(120, 310, f"Tipo: {tipo_peca}")
+    texto(120, 430, f"Cadastrado por: {cadastrado_por}")
+    texto(120, 550, f"Responsável: {responsavel}")
+    texto(120, 670, f"Data de cadastro: {data_cadastro}")
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 740, f"Status atual: {status_texto}", font_status)
-    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 790, f"Status atual: {status_texto}")
+    texto(120, 910, f"Atualizado por: {atualizado_por}")
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
@@ -359,7 +347,7 @@ if menu == "➕ Cadastrar Nova Peça":
             st.session_state.last_pdf = qr_code
             st.rerun()
     
-    # ==================== DOWNLOAD DA ETIQUETA (ÚNICO E COM FONTE GRANDE) ====================
+    # ==================== DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
