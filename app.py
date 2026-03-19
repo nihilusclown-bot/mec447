@@ -277,17 +277,16 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     img = Image.new("RGB", (2800, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
-        
+    
     font = ImageFont.load_default()
-       
+    
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
-       
+    
     def texto(x, y, texto):
         draw.text((x+6, y+6), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Layout completo
     texto(120, 140, f"Nº: {qr_code}")
     texto(120, 310, f"Tipo: {tipo_peca}")
     texto(120, 430, f"Cadastrado por: {cadastrado_por}")
