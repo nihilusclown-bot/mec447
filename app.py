@@ -322,11 +322,11 @@ if menu == "➕ Cadastrar Nova Peça":
     else:
         responsavel_selecionado = st.session_state.user['nome']
     
-    with st.form("cadastro"):
-        tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)")
-        etapa_inicial = st.selectbox("Etapa Inicial", ["Usinagem"])
-        obs = st.text_area("Observações iniciais")
-        desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", type=["pdf", "png", "jpg", "jpeg"])
+    with st.form("cadastro_nova_peca", clear_on_submit=True):  # ← força limpeza automática
+        tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
+        etapa_inicial = st.selectbox("Etapa Inicial", ["Usinagem"], key="cad_etapa")
+        obs = st.text_area("Observações iniciais", key="cad_obs")
+        desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", type=["pdf", "png", "jpg", "jpeg"], key="cad_desenho")
         submitted = st.form_submit_button("Cadastrar Peça")
         
         if submitted:
@@ -334,7 +334,6 @@ if menu == "➕ Cadastrar Nova Peça":
             agora = datetime.now().strftime("%d/%m/%Y %H:%M")
             desenho_bytes = desenho.read() if desenho else None
             
-            # ✅ CORRIGIDO: agora com 11 colunas (incluindo cor_atual)
             c.execute("""INSERT INTO pecas 
                          (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
                           data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
@@ -352,12 +351,18 @@ if menu == "➕ Cadastrar Nova Peça":
             st.session_state.last_pdf = qr_code
             st.rerun()
     
+    # ==================== DOWNLOAD E BOTÃO LIMPAR ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
-        img = gerar_etiqueta(qr, tipo, etapa_inicial)
+        # Recupera o tipo da peça para gerar a etiqueta
+        df_tipo = pd.read_sql(f"SELECT tipo_peca FROM pecas WHERE qr_code = '{qr}'", conn)
+        tipo_peca = df_tipo.iloc[0]['tipo_peca'] if not df_tipo.empty else "Desconhecido"
+        
+        img = gerar_etiqueta(qr, tipo_peca, etapa_inicial)
         buf = io.BytesIO()
         img.save(buf, format="PDF", resolution=300)
         buf.seek(0)
+        
         st.download_button(
             label="📄 **BAIXAR ETIQUETA EM PDF AGORA**",
             data=buf.getvalue(),
@@ -366,8 +371,12 @@ if menu == "➕ Cadastrar Nova Peça":
             type="primary",
             use_container_width=True
         )
-        if st.button("Limpar"):
-            st.session_state.last_pdf = None
+        
+        if st.button("🧹 Limpar formulário e preparar nova peça", type="secondary", use_container_width=True):
+            # Limpa TODOS os campos do formulário
+            for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.rerun()
 
 # ==================== ATUALIZAR STATUS ====================
