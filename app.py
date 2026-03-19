@@ -285,31 +285,35 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     img = Image.new("RGB", (2800, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    font_titulo = ImageFont.load_default()
-    font_normal = ImageFont.load_default()
-    font_status = ImageFont.load_default()
+    # Fonte do sistema do servidor (sempre disponível e grande)
+    try:
+        font_titulo = ImageFont.truetype("DejaVuSans.ttf", 190)
+        font_normal = ImageFont.truetype("DejaVuSans.ttf", 115)
+        font_status = ImageFont.truetype("DejaVuSans.ttf", 85)
+    except:
+        font_titulo = ImageFont.load_default()
+        font_normal = ImageFont.load_default()
+        font_status = ImageFont.load_default()
     
     # QR Code grande
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
     
-    # Simulação de fonte grande e grossa (desenhando várias vezes)
+    # Sombra simples e forte
     def texto(x, y, texto, font):
-        for dx in range(-6, 7):
-            for dy in range(-6, 7):
-                draw.text((x + dx, y + dy), texto, font=font, fill="#111111")
+        draw.text((x+6, y+6), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Layout com letras grandes e legíveis
+    # Layout com letras grandes
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 580, f"Responsável: {responsavel}", font_normal)
-    texto(120, 710, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 520, f"Responsável: {responsavel}", font_normal)
+    texto(120, 630, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 840, f"Status atual: {status_texto}", font_status)
-    texto(120, 970, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 740, f"Status atual: {status_texto}", font_status)
+    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
