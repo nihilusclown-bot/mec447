@@ -755,27 +755,34 @@ elif menu == "🖨️ Gerar Etiqueta":
         qr_input = escolha.split(" - ")[0]   # pega o código automaticamente
     
     if qr_input:
-        # Busca automaticamente o tipo da peça
-        df_tipo = pd.read_sql(f"SELECT tipo_peca FROM pecas WHERE qr_code = '{qr_input}'", conn)
-        tipo_peca = df_tipo.iloc[0]['tipo_peca'] if not df_tipo.empty else "Desconhecido"
-        
-        if qr_input:
-    df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
-    if not df.empty:
-        peca = df.iloc[0]
-        atualizado_por = peca["responsavel"] + " - " + peca.get("responsavel_conclusao", "—")
-        
-        if st.button("Gerar Etiqueta"):
-            img = gerar_etiqueta(
-                qr_code=qr_input,
-                tipo_peca=peca["tipo_peca"],
-                cadastrado_por=peca["responsavel"],
-                responsavel=peca["responsavel"],
-                data_cadastro=peca["data_cadastro"],
-                etapa_atual=peca["etapa"],
-                data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
-                atualizado_por=atualizado_por
-            )
-            # ... resto do st.image e download igual ...
+        df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
+        if not df.empty:
+            peca = df.iloc[0]
+            atualizado_por = f"{peca.get('responsavel', '—')} - {peca.get('responsavel_conclusao', '—')}"
+            
+            if st.button("Gerar Etiqueta"):
+                img = gerar_etiqueta(
+                    qr_code=qr_input,
+                    tipo_peca=peca["tipo_peca"],
+                    cadastrado_por=peca["responsavel"],
+                    responsavel=peca["responsavel"],
+                    data_cadastro=peca["data_cadastro"],
+                    etapa_atual=peca["etapa"],
+                    data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
+                    atualizado_por=atualizado_por
+                )
+                st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
+                
+                buf = io.BytesIO()
+                img.save(buf, format="PDF", resolution=300)
+                buf.seek(0)
+                st.download_button(
+                    label="📄 Baixar Etiqueta em PDF",
+                    data=buf.getvalue(),
+                    file_name=f"etiqueta_{qr_input}.pdf",
+                    mime="application/pdf"
+                )
+        else:
+            st.error("QR Code não encontrado!")
     else:
         st.info("Selecione ou digite um QR Code para gerar a etiqueta.")
