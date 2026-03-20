@@ -280,30 +280,33 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
     try:
-        logo = Image.open("inspmax_logo.png").convert("RGBA")
-        # Logo maior e preenchendo toda a área marcada
-        logo = logo.resize((380, 155), Image.Resampling.LANCZOS)
+        logo_original = Image.open("inspmax_logo.png").convert("RGBA")
+        logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
+                
+        logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
+        logo_com_fundo_branco.paste(logo, (0, 0), logo)   # cola com transparência
+        
+        # Caixa suave atrás da logo (opcional - pode apagar se quiser sem borda)
+        draw.rectangle([85, 25, 85+390, 25+170], fill="white", outline="#f0f0f0", width=3)
               
-        draw.rectangle([85, 25, 85+390, 25+170], fill="white", outline="#e0e0e0", width=4)
-              
-        img.paste(logo, (95, 35), logo)
+        img.paste(logo_com_fundo_branco, (95, 35))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
-      
+        
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
     draw.rectangle([820, 190, 820+285, 190+285], fill="white", outline="#eeeeee", width=4)
     img.paste(qr_img, (830, 200))
       
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 52)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
         font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
     except:
         font_titulo = font_normal = ImageFont.load_default()
     
     def texto(x, y, txt, font, cor="black"):
         draw.text((x, y), txt, fill=cor, font=font)
-        
+    
     texto(95, 215, f"Nº: {qr_code}", font_titulo)
     texto(95, 275, f"Tipo: {tipo_peca}", font_normal)
     texto(95, 320, f"Cadastrado por: {cadastrado_por}", font_normal)
