@@ -283,16 +283,21 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
         font_normal = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 130)
         font_status = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 95)
     except:
-        font_titulo = font_normal = font_status = ImageFont.load_default()
+        
+        try:
+            font_titulo = ImageFont.truetype("arial.ttf", 190)
+            font_normal = ImageFont.truetype("arial.ttf", 115)
+            font_status = ImageFont.truetype("arial.ttf", 85)
+        except:
+            font_titulo = font_normal = font_status = ImageFont.load_default()
     
-    # QR Code grande
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
-        
+    
     def texto(x, y, texto, font):
         draw.text((x+6, y+6), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
-        
+      
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 310, f"Tipo: {tipo_peca}", font_normal)
     texto(120, 430, f"Cadastrado por: {cadastrado_por}", font_normal)
