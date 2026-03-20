@@ -24,7 +24,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              status TEXT,
              etapa TEXT,
              responsavel TEXT,
-             cadastrado_por TEXT,
+             cadastrado_por TEXT,          -- NOVO: quem cadastrou (com cargo)
              data_cadastro TEXT,
              resultado TEXT,
              data_conclusao TEXT,
@@ -42,13 +42,14 @@ c.execute('''CREATE TABLE IF NOT EXISTS historico (
              data TEXT,
              observacao TEXT)''')
 
+conn.commit()
+
 try:
     c.execute("ALTER TABLE pecas ADD COLUMN cadastrado_por TEXT")
+    conn.commit()
     print("✅ Coluna 'cadastrado_por' adicionada com sucesso!")
 except sqlite3.OperationalError:
-    pass 
-
-conn.commit()
+    pass  
 
 # ==================== USUÁRIO ADMIN ====================
 c.execute("SELECT nome FROM users WHERE nome='admin'")
@@ -286,7 +287,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
-    # ==================== LOGO ====================
+    # LOGO
     try:
         logo_original = Image.open("inspmax_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
@@ -296,28 +297,29 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
 
-    # ==================== QR CODE ====================
+    # QR CODE (sem moldura)
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
     img.paste(qr_img, (830, 200))
 
-    # ==================== FONTES ====================
+    # FONTES
     try:
         font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
         font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
     except:
         font_titulo = font_normal = ImageFont.load_default()
 
-    # ==================== TEXTO COM QUEBRA AUTOMÁTICA ====================
+    # FUNÇÃO DE TEXTO COM QUEBRA AUTOMÁTICA
     def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura=720):
-        if not texto or not texto.strip():
+        if not texto.strip():
             return y_inicial + 10
         palavras = texto.split()
         linhas = []
         linha_atual = []
         for palavra in palavras:
             linha_teste = ' '.join(linha_atual + [palavra])
-            if draw.textlength(linha_teste, font=font) > max_largura and linha_atual:
+            largura_teste = draw.textlength(linha_teste, font=font)
+            if largura_teste > max_largura and linha_atual:
                 linhas.append(' '.join(linha_atual))
                 linha_atual = [palavra]
             else:
@@ -331,7 +333,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
             y += font.size + 12
         return y + 8
 
-    # ==================== TEXTOS ====================
+    # TEXTOS
     y = 215
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
     y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
@@ -344,7 +346,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
 
     return img
                      
-   # ==================== CADASTRAR NOVA PEÇA ====================
+  # ==================== CADASTRAR NOVA PEÇA ====================
 if menu == "➕ Cadastrar Nova Peça":
     if st.session_state.user['funcao'] not in ["Operador", "Gestor", "Supervisor", "Administrador"]:
         st.error("❌ Você não tem permissão para cadastrar peças.")
@@ -390,6 +392,7 @@ if menu == "➕ Cadastrar Nova Peça":
             st.session_state.last_pdf = qr_code
             st.rerun()
   
+    # DOWNLOAD DA ETIQUETA
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
@@ -418,6 +421,12 @@ if menu == "➕ Cadastrar Nova Peça":
                 type="primary",
                 use_container_width=True
             )
+            
+            if st.button("🧹 Limpar formulário e preparar nova peça", type="secondary", use_container_width=True):
+                for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
           
 # ==================== ATUALIZAR STATUS ====================
 elif menu == "🔄 Atualizar Status":
@@ -457,7 +466,7 @@ elif menu == "🔄 Atualizar Status":
                 nova_etapa = st.selectbox("Nova Etapa", list(CORES.keys()))
                 nova_obs = st.text_area("Observações")
                 
-                  if st.button("Atualizar Status"):
+                if st.button("Atualizar Status"):
                     if nova_etapa != peca['etapa']:
                         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
                         responsavel_full = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
@@ -479,7 +488,7 @@ elif menu == "🔄 Atualizar Status":
                     
                     if st.button("✅ CONCLUIR PEÇA", type="primary"):
                         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-                        responsavel = st.session_state.user['nome']
+                        responsavel = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
                         c.execute("""UPDATE pecas
                                      SET resultado=?, responsavel_conclusao=?, data_conclusao=?
                                      WHERE qr_code=?""",
