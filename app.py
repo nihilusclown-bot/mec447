@@ -272,20 +272,20 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2800, 1700), color=cor_hex)  
+    img = Image.new("RGB", (2900, 1750), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
     try:
         font_path = "DejaVuSans-Bold.ttf"
-        font_titulo = ImageFont.truetype(font_path, 115)  
-        font_normal = ImageFont.truetype(font_path, 70)    
-        font_status = ImageFont.truetype(font_path, 50)    
+        font_titulo = ImageFont.truetype(font_path, 135)
+        font_normal = ImageFont.truetype(font_path, 88)
+        font_status = ImageFont.truetype(font_path, 72)
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
-        
+    
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1950, 420))
-        
+    
     def texto(x, y, texto, font):
         draw.text((x+3, y+3), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
@@ -295,10 +295,9 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
     texto(120, 490, f"Responsável: {responsavel}", font_normal)
     texto(120, 590, f"Data de cadastro: {data_cadastro}", font_normal)
-    
-    status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 690, f"Status atual: {status_texto}", font_status)
-    texto(120, 790, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 690, f"Status atual: {etapa_atual}", font_status)
+    texto(120, 770, f"Data de atualização: {data_atualizacao}", font_status)
+    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
                      
