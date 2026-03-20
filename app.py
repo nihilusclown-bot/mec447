@@ -74,18 +74,80 @@ if "qr_code" in query_params:
         
         st.title(f"📋 Peça: **{qr}**")
         st.subheader(peca["tipo_peca"])
-        st.write(f"**Etapa atual:** {peca.get('etapa', '—')}")
-        st.write(f"**Responsável:** {peca.get('responsavel', '—')}")
-        st.write(f"**Data de cadastro:** {peca.get('data_cadastro', '—')}")
         
-        if peca.get("desenho_tecnico"):
-            try:
-                st.image(peca["desenho_tecnico"], caption="Desenho Técnico", use_container_width=True)
-            except:
-                st.info("Desenho técnico disponível, mas não pôde ser exibido.")
+        # Informações principais
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**Etapa atual:** {peca.get('etapa', '—')}")
+            st.markdown(f"**Responsável:** {peca.get('responsavel', '—')}")
+            st.markdown(f"**Data de cadastro:** {peca.get('data_cadastro', '—')}")
+        with col2:
+            st.image(criar_qr_pil(qr).resize((200, 200)), caption="QR Code da peça")
+        
+        # ==================== HISTÓRICO E COMENTÁRIOS ====================
+        st.divider()
+        st.subheader("📜 Histórico e Comentários")
+        
+        df_hist = pd.read_sql(f"""
+            SELECT data AS 'Data/Hora',
+                   responsavel AS 'Responsável',
+                   etapa AS 'Etapa',
+                   status AS 'Status',
+                   observacao AS 'Comentário'
+            FROM historico 
+            WHERE qr_code = '{qr}' 
+            ORDER BY data ASC
+        """, conn)
+        
+        if not df_hist.empty:
+            with st.expander("Ver todos os registros e comentários (clique para expandir)", expanded=False):
+                st.dataframe(
+                    df_hist,
+                    use_container_width=True,
+                    column_config={
+                        "Data/Hora": st.column_config.TextColumn("Data/Hora"),
+                        "Responsável": st.column_config.TextColumn("Responsável"),
+                        "Etapa": st.column_config.TextColumn("Etapa"),
+                        "Status": st.column_config.TextColumn("Status"),
+                        "Comentário": st.column_config.TextColumn("Comentário", width="large")
+                    }
+                )
         else:
-            st.info("Nenhum desenho técnico cadastrado.")
+            st.info("Ainda não há comentários ou atualizações registradas.")
         
+        # ==================== DESENHO TÉCNICO ====================
+        st.divider()
+        st.subheader("🖼️ Desenho Técnico")
+        if peca.get("desenho_tecnico"):
+            desenho_bytes = peca["desenho_tecnico"]
+            
+            try:
+                # Preview maior em expander 
+                with st.expander("Visualizar desenho ampliado (clique para abrir)", expanded=False):
+                    st.image(desenho_bytes, caption="Desenho Técnico Ampliado", use_container_width=True)
+                
+                # Botão de download
+                st.download_button(
+                    label="⬇️ Baixar Desenho Técnico (PDF/Imagem)",
+                    data=desenho_bytes,
+                    file_name=f"desenho_{qr}.pdf", 
+                    mime="application/pdf",  
+                    type="primary",
+                    use_container_width=True
+                )
+            except:
+                st.warning("Desenho disponível, mas não pôde ser exibido como imagem. Use o download abaixo.")
+                st.download_button(
+                    label="⬇️ Baixar Arquivo do Desenho",
+                    data=desenho_bytes,
+                    file_name=f"desenho_{qr}.bin",
+                    mime="application/octet-stream",
+                    use_container_width=True
+                )
+        else:
+            st.info("Nenhum desenho técnico cadastrado para esta peça.")
+        
+        # Botão para atualizar status
         if st.button("🔄 Atualizar Status desta peça", type="primary", use_container_width=True):
             st.session_state.scanned_qr = qr
             st.session_state.user = None
