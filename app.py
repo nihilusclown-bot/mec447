@@ -280,19 +280,19 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     try:
         font_path = "DejaVuSans-Bold.ttf"
-        font_titulo = ImageFont.truetype(font_path, 240)
-        font_normal = ImageFont.truetype(font_path, 135)
-        font_status = ImageFont.truetype(font_path, 100)
+        font_titulo = ImageFont.truetype(font_path, 180)   # reduzido
+        font_normal = ImageFont.truetype(font_path, 105)   # reduzido
+        font_status = ImageFont.truetype(font_path, 80)    # reduzido
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
     
     qr_img = criar_qr_pil(qr_code).resize((800, 800), Image.LANCZOS)
     img.paste(qr_img, (1950, 420))
-    
+        
     def texto(x, y, texto, font):
-        draw.text((x+8, y+8), texto, font=font, fill="#111111")
+        draw.text((x+4, y+4), texto, font=font, fill="#222222")   # sombra leve
         draw.text((x, y), texto, font=font, fill="black")
-    
+        
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
     texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
