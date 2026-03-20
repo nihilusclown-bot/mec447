@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import altair as alt
 
-st.set_page_config(page_title="Controle de Peças QR", layout="wide")
+st.set_page_config(page_title="InspMax", layout="wide")
 
 # ==================== BANCO DE DADOS ====================
 conn = sqlite3.connect("pecas.db", check_same_thread=False)
@@ -146,7 +146,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    st.title("🛠️ Controle de Peças QR - Login")
+    st.title("🛠️ InspMax - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
