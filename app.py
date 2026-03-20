@@ -146,93 +146,87 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    st.title("🛠️ InspMax - Login")
+    st.title("🛠️ Controle de Peças QR - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
-    # ==================== LAYOUT COM VÍDEO PEQUENO ====================
-    col_form, col_video = st.columns([3.3, 1])   
+    # ==================== IMAGEM NO TOPO ====================
+    st.image(
+        "inspmax_logo.png",              # ← seu logo (já existe no projeto)
+        use_container_width=True,
+        caption="InspMax - Controle de Qualidade"
+    )
     
-    with col_form:
-        tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
-        
-        # ====================== LOGIN ======================
-        with tab_login:
-            with st.form("login_form"):
-                nome_ou_email = st.text_input("Nome de usuário ou E-mail")
-                senha = st.text_input("Senha", type="password")
-                submitted = st.form_submit_button("Entrar", use_container_width=True)
-                
-                if submitted:
-                    if nome_ou_email and senha:
-                        df_user = pd.read_sql(f"""
-                            SELECT * FROM users 
-                            WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}') 
-                            AND senha = '{senha}'
-                        """, conn)
-                        if not df_user.empty:
-                            st.session_state.user = df_user.iloc[0].to_dict()
-                            st.rerun()
-                        else:
-                            st.error("Usuário, e-mail ou senha incorretos!")
-                    else:
-                        st.error("Preencha todos os campos!")
-
-        # ====================== CADASTRO ======================
-        with tab_register:
-            if st.session_state.get("cadastro_sucesso", False):
-                st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
-                st.session_state.cadastro_sucesso = False
-
-            novo_nome = st.text_input("Nome completo (será seu login)")
-            novo_email = st.text_input("E-mail válido")
-            nova_senha = st.text_input("Escolha uma senha", type="password")
-            funcao = st.selectbox("Função", ["Operador", "Inspetor de Qualidade", "Supervisor", "Gestor"])
+    # ==================== TABS DO LOGIN ====================
+    tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
+    
+    # ====================== LOGIN ======================
+    with tab_login:
+        with st.form("login_form"):
+            nome_ou_email = st.text_input("Nome de usuário ou E-mail")
+            senha = st.text_input("Senha", type="password")
+            submitted = st.form_submit_button("Entrar", use_container_width=True)
             
-            if st.button("Cadastrar Usuário", use_container_width=True):
-                if novo_nome and novo_email and nova_senha and "@" in novo_email:
-                    try:
-                        c.execute("""INSERT INTO users 
-                                     (nome, email, senha, funcao, funcao_custom) 
-                                     VALUES (?,?,?,?,?)""",
-                                  (novo_nome, novo_email, nova_senha, funcao, None))
-                        conn.commit()
-                        st.session_state.cadastro_sucesso = True
-                        st.rerun()   
-                    except sqlite3.IntegrityError:
-                        st.error("Esse nome ou e-mail já está cadastrado!")
+            if submitted:
+                if nome_ou_email and senha:
+                    df_user = pd.read_sql(f"""
+                        SELECT * FROM users 
+                        WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}') 
+                        AND senha = '{senha}'
+                    """, conn)
+                    if not df_user.empty:
+                        st.session_state.user = df_user.iloc[0].to_dict()
+                        st.rerun()
+                    else:
+                        st.error("Usuário, e-mail ou senha incorretos!")
                 else:
                     st.error("Preencha todos os campos!")
 
-        # ====================== ESQUECI MINHA SENHA ======================
-        with tab_recover:
-            st.write("Informe seu **e-mail** ou **nome de usuário**:")
-            recover_input = st.text_input("E-mail ou Nome")
-            if st.button("Recuperar senha"):
-                df = pd.read_sql(f"""
-                    SELECT nome, email FROM users 
-                    WHERE nome = '{recover_input}' OR email = '{recover_input}'
-                """, conn)
-                if not df.empty:
-                    st.success(f"✅ Usuário encontrado: **{df.iloc[0]['nome']}**")
-                    nova_senha_recover = st.text_input("Digite sua **nova senha**", type="password")
-                    if st.button("Alterar senha"):
-                        c.execute("UPDATE users SET senha = ? WHERE nome = ? OR email = ?",
-                                  (nova_senha_recover, recover_input, recover_input))
-                        conn.commit()
-                        st.success("Senha alterada com sucesso!")
-                else:
-                    st.error("E-mail ou nome não encontrado!")
+    # ====================== CADASTRO ======================
+    with tab_register:
+        if st.session_state.get("cadastro_sucesso", False):
+            st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
+            st.session_state.cadastro_sucesso = False
 
-    # ==================== VÍDEO PEQUENO ====================
-    with col_video:
-             st.video(
-            "video_login.mp4",
-            format="video/mp4",
-            loop=True,
-            autoplay=True,
-            muted=True
-        )
-    
+        novo_nome = st.text_input("Nome completo (será seu login)")
+        novo_email = st.text_input("E-mail válido")
+        nova_senha = st.text_input("Escolha uma senha", type="password")
+        funcao = st.selectbox("Função", ["Operador", "Inspetor de Qualidade", "Supervisor", "Gestor"])
+        
+        if st.button("Cadastrar Usuário", use_container_width=True):
+            if novo_nome and novo_email and nova_senha and "@" in novo_email:
+                try:
+                    c.execute("""INSERT INTO users 
+                                 (nome, email, senha, funcao, funcao_custom) 
+                                 VALUES (?,?,?,?,?)""",
+                              (novo_nome, novo_email, nova_senha, funcao, None))
+                    conn.commit()
+                    st.session_state.cadastro_sucesso = True
+                    st.rerun()   
+                except sqlite3.IntegrityError:
+                    st.error("Esse nome ou e-mail já está cadastrado!")
+            else:
+                st.error("Preencha todos os campos!")
+
+    # ====================== ESQUECI MINHA SENHA ======================
+    with tab_recover:
+        st.write("Informe seu **e-mail** ou **nome de usuário**:")
+        recover_input = st.text_input("E-mail ou Nome")
+        if st.button("Recuperar senha"):
+            df = pd.read_sql(f"""
+                SELECT nome, email FROM users 
+                WHERE nome = '{recover_input}' OR email = '{recover_input}'
+            """, conn)
+            if not df.empty:
+                st.success(f"✅ Usuário encontrado: **{df.iloc[0]['nome']}**")
+                nova_senha_recover = st.text_input("Digite sua **nova senha**", type="password")
+                if st.button("Alterar senha"):
+                    c.execute("UPDATE users SET senha = ? WHERE nome = ? OR email = ?",
+                              (nova_senha_recover, recover_input, recover_input))
+                    conn.commit()
+                    st.success("Senha alterada com sucesso!")
+            else:
+                st.error("E-mail ou nome não encontrado!")
+
     st.stop()
 # ==================== MENU + SIDEBAR  ====================
 try:
