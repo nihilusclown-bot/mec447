@@ -280,30 +280,19 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     
     cor_etapa = CORES.get(etapa_atual, "#1E90FF")
     
-    # Aumentamos a altura da etiqueta para caber o logo maior
-    largura, altura = 1150, 800
+    largura, altura = 1200, 800
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
         
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
-    # ==================== LOGO MAIS CUMPRIDO  ====================
+    # ==================== LOGO  ====================
     try:
         logo_original = Image.open("inspmax_logo.png").convert("RGBA")
-        
-        nova_largura = 380
-        proporcao = logo_original.height / logo_original.width
-        nova_altura = int(nova_largura * proporcao)   
-        
-        # Se quiser deixar AINDA MAIS alto (ex: 20% maior), descomente a linha abaixo:
-        # nova_altura = int(nova_altura * 1.25)
-        
-        logo = logo_original.resize((nova_largura, nova_altura), Image.Resampling.LANCZOS)
-        
+        logo = logo_original.resize((380, 200), Image.Resampling.LANCZOS)
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
         logo_com_fundo_branco.paste(logo, (0, 0), logo)
-        img.paste(logo_com_fundo_branco, (95, 20))
-        
+        img.paste(logo_com_fundo_branco, (95, 35))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
 
@@ -314,8 +303,8 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
 
     # ==================== FONTES ====================
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
-        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 40)
+        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 30)
     except:
         font_titulo = font_normal = ImageFont.load_default()
 
@@ -344,7 +333,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         return y + 8
 
     # ==================== TEXTOS ====================
-    y = 260
+    y = 215
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
     y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
     y = desenhar_texto(95, y, f"Cadastrado por: {cadastrado_por}", font_normal)
