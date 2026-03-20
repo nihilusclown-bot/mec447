@@ -24,6 +24,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              status TEXT,
              etapa TEXT,
              responsavel TEXT,
+             cadastrado_por TEXT,
              data_cadastro TEXT,
              resultado TEXT,
              data_conclusao TEXT,
@@ -41,9 +42,15 @@ c.execute('''CREATE TABLE IF NOT EXISTS historico (
              data TEXT,
              observacao TEXT)''')
 
+try:
+    c.execute("ALTER TABLE pecas ADD COLUMN cadastrado_por TEXT")
+    print("✅ Coluna 'cadastrado_por' adicionada com sucesso!")
+except sqlite3.OperationalError:
+    pass 
+
 conn.commit()
 
-# ==================== USUÁRIO ADMIN AUTOMÁTICO ====================
+# ==================== USUÁRIO ADMIN ====================
 c.execute("SELECT nome FROM users WHERE nome='admin'")
 if not c.fetchone():
     c.execute("""INSERT INTO users 
@@ -51,7 +58,7 @@ if not c.fetchone():
                  VALUES (?,?,?,?,?)""",
               ("admin", None, "mec347", "Administrador", None))
     conn.commit()
-    print("✅ Usuário admin criado automaticamente (senha: mec347)")  
+    print("✅ Usuário admin criado automaticamente (senha: mec347)")
   
 # ==================== PÁGINA PÚBLICA VIA QR CODE ====================
 query_params = st.query_params
@@ -278,7 +285,8 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     draw = ImageDraw.Draw(img)
         
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
-      
+        
+    # ==================== LOGO ====================
     try:
         logo_original = Image.open("inspmax_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
@@ -287,43 +295,43 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         img.paste(logo_com_fundo_branco, (95, 35))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
-    
+
+    # ==================== QR CODE ====================
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
-    img.paste(qr_img, (830, 200))   # sem moldura cinza
-    
+    img.paste(qr_img, (830, 200))
+
+    # ==================== FONTES ====================
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 42)
-        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 32)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
+        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
     except:
         font_titulo = font_normal = ImageFont.load_default()
-    
+
+    # ==================== TEXTO COM QUEBRA AUTOMÁTICA ====================
     def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura=720):
-        if not texto.strip():
+        if not texto or not texto.strip():
             return y_inicial + 10
         palavras = texto.split()
         linhas = []
         linha_atual = []
-        
         for palavra in palavras:
             linha_teste = ' '.join(linha_atual + [palavra])
-            largura_teste = draw.textlength(linha_teste, font=font)
-            
-            if largura_teste > max_largura and linha_atual:
+            if draw.textlength(linha_teste, font=font) > max_largura and linha_atual:
                 linhas.append(' '.join(linha_atual))
                 linha_atual = [palavra]
             else:
-                linha_atual.append(palavra)  
-        
+                linha_atual.append(palavra)
         if linha_atual:
             linhas.append(' '.join(linha_atual))
         
         y = y_inicial
         for linha in linhas:
             draw.text((x, y), linha, fill=cor, font=font)
-            y += font.size + 12   
+            y += font.size + 12
         return y + 8
-    
+
+    # ==================== TEXTOS ====================
     y = 215
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
     y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
@@ -345,10 +353,13 @@ if menu == "➕ Cadastrar Nova Peça":
     st.header("Cadastrar Nova Peça")
     
     if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
-        operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
-        responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
+        df_op = pd.read_sql("SELECT funcao, nome FROM users WHERE funcao = 'Operador'", conn)
+        op_options = [f"{row['funcao']} - {row['nome']}" for _, row in df_op.iterrows()]
+        responsavel_selecionado = st.selectbox("Operador responsável pela peça", op_options or ["Sem operador"], key="resp_cadastro")
     else:
-        responsavel_selecionado = st.session_state.user['nome']
+        responsavel_selecionado = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
+    
+    cadastrado_por_full = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
     
     with st.form("cadastro_nova_peca", clear_on_submit=True):
         tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
@@ -363,23 +374,22 @@ if menu == "➕ Cadastrar Nova Peça":
             desenho_bytes = desenho.read() if desenho else None
             
             c.execute("""INSERT INTO pecas 
-                         (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
+                         (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, cadastrado_por,
                           data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
-                         VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                       (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
-                       responsavel_selecionado, agora, None, None, None, desenho_bytes))
+                       responsavel_selecionado, cadastrado_por_full, agora, None, None, None, desenho_bytes))
             
             c.execute("""INSERT INTO historico 
                          (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
                          VALUES (?,?,?,?,?,?,?,?)""",
-                      (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
+                      (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", st.session_state.user['nome'], agora, obs))
             conn.commit()
             
             st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**")
             st.session_state.last_pdf = qr_code
             st.rerun()
   
-    # ==================== DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
@@ -389,8 +399,8 @@ if menu == "➕ Cadastrar Nova Peça":
             img = gerar_etiqueta(
                 qr_code=qr,
                 tipo_peca=peca["tipo_peca"],
-                cadastrado_por=responsavel_selecionado,
-                responsavel=responsavel_selecionado,
+                cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
+                responsavel=peca["responsavel"],
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
                 data_atualizacao=peca["data_cadastro"],
@@ -408,13 +418,7 @@ if menu == "➕ Cadastrar Nova Peça":
                 type="primary",
                 use_container_width=True
             )
-            
-            if st.button("🧹 Limpar formulário e preparar nova peça", type="secondary", use_container_width=True):
-                for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.rerun()
-      
+          
 # ==================== ATUALIZAR STATUS ====================
 elif menu == "🔄 Atualizar Status":
     st.header("Atualizar Status da Peça")
@@ -453,16 +457,16 @@ elif menu == "🔄 Atualizar Status":
                 nova_etapa = st.selectbox("Nova Etapa", list(CORES.keys()))
                 nova_obs = st.text_area("Observações")
                 
-                if st.button("Atualizar Status"):
+                  if st.button("Atualizar Status"):
                     if nova_etapa != peca['etapa']:
                         agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-                        responsavel = st.session_state.user['nome']
+                        responsavel_full = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
                         c.execute("UPDATE pecas SET etapa=?, cor_atual=?, responsavel=?, data_cadastro=? WHERE qr_code=?",
-                                  (nova_etapa, nova_etapa, responsavel, agora, qr_input))
+                                  (nova_etapa, nova_etapa, responsavel_full, agora, qr_input))
                         c.execute("""INSERT INTO historico
                                      (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao)
                                      VALUES (?,?,?,?,?,?,?,?)""",
-                                  (qr_input, peca['tipo_peca'], nova_etapa, nova_etapa, "Atualizado", responsavel, agora, nova_obs))
+                                  (qr_input, peca['tipo_peca'], nova_etapa, nova_etapa, "Atualizado", responsavel_full, agora, nova_obs))
                         conn.commit()
                         st.toast("✅ Status atualizado!", icon="🎉")
                         st.rerun()
@@ -782,22 +786,21 @@ elif menu == "🖨️ Gerar Etiqueta":
     else:
         qr_input = escolha.split(" - ")[0]
     
-    if qr_input:
+        if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
         if not df.empty:
             peca = df.iloc[0]
-            atualizado_por = f"{peca.get('responsavel', '—')} - {peca.get('responsavel_conclusao', '—')}"
             
             if st.button("Gerar Etiqueta"):
                 img = gerar_etiqueta(
                     qr_code=qr_input,
                     tipo_peca=peca["tipo_peca"],
-                    cadastrado_por=peca["responsavel"],
+                    cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
                     responsavel=peca["responsavel"],
                     data_cadastro=peca["data_cadastro"],
                     etapa_atual=peca["etapa"],
                     data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
-                    atualizado_por=atualizado_por
+                    atualizado_por=peca["responsavel"]   # último responsável (com cargo)
                 )
                 st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
                 
