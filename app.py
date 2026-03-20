@@ -142,12 +142,15 @@ if "qr_code" in query_params:
         st.stop()
 
 # ==================== SESSÃO E LOGIN ====================
+if "user" not in st.session_state:
+    st.session_state.user = None
+
 if not st.session_state.user:
     st.title("🛠️ Controle de Peças QR - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
-    # ==================== LAYOUT COM VÍDEO À DIREITA ====================
-    col_form, col_video = st.columns([2.8, 0.9])  
+    # ==================== LAYOUT COM VÍDEO PEQUENO ====================
+    col_form, col_video = st.columns([2.8, 0.9])   # formulário grande + vídeo pequeno
     
     with col_form:
         tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -223,16 +226,16 @@ if not st.session_state.user:
                 else:
                     st.error("E-mail ou nome não encontrado!")
 
-    # ==================== VÍDEO EM LOOP ====================
+    # ==================== VÍDEO PEQUENO E BONITO ====================
     with col_video:
-        st.markdown("### 🎥 InspMax em ação")
+        st.markdown("### 🎥 InspMax")
         st.video(
-            "video_login.mp4",          
+            "video_login.mp4",
             format="video/mp4",
             loop=True,
             autoplay=True,
-            muted=False,
-          height=320
+            muted=True,
+            height=280          # ← altura ideal (pode mudar para 250 ou 300)
         )
     
     st.stop()
