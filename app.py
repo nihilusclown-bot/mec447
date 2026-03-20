@@ -146,16 +146,17 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    st.title("🛠️ InspMax - Login")
+    st.title("🛠️ Controle de Peças QR - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
-    # ==================== IMAGEM NO TOPO ====================
-   col1, col2, col3 = st.columns([1, 2, 1])
+    # ==================== LOGO NO TOPO (MENOR E CENTRALIZADA) ====================
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image(
             "inspmax_logo.png",
             width=420,                   
             use_column_width=False
+        )
     
     # ==================== TABS DO LOGIN ====================
     tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
