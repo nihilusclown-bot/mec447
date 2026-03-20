@@ -277,45 +277,59 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
         
+    # Barra lateral colorida (azul ou cor da etapa)
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
     try:
         logo_original = Image.open("inspmax_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
-                
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
-        logo_com_fundo_branco.paste(logo, (0, 0), logo)   # cola com transparência
-        
-        # Caixa suave atrás da logo (opcional - pode apagar se quiser sem borda)
-        draw.rectangle([85, 25, 85+390, 25+170], fill="white", outline="#f0f0f0", width=3)
-              
+        logo_com_fundo_branco.paste(logo, (0, 0), logo)
         img.paste(logo_com_fundo_branco, (95, 35))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
-        
+   
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
-    draw.rectangle([820, 190, 820+285, 190+285], fill="white", outline="#eeeeee", width=4)
-    img.paste(qr_img, (830, 200))
-      
+    img.paste(qr_img, (830, 200))   
+    
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
-        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 42)
+        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 32)
     except:
         font_titulo = font_normal = ImageFont.load_default()
     
-    def texto(x, y, txt, font, cor="black"):
-        draw.text((x, y), txt, fill=cor, font=font)
+    def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura_pixels=680):
+        palavras = texto.split()
+        linhas = []
+        linha_atual = []
+        for palavra in palavras:
+            linha_teste = ' '.join(linha_atual + [palavra])
+            largura_teste = draw.textlength(linha_teste, font=font)
+            if largura_teste > max_largura_pixels:
+                linhas.append(' '.join(linha_atual))
+                linha_atual = [palavra]
+            else:
+                linha_atual = [palavra]
+        if linha_atual:
+            linhas.append(' '.join(linha_atual))
+
+        y = y_inicial
+        for linha in linhas:
+            draw.text((x, y), linha, fill=cor, font=font)
+            y += font.size + 8   
+        return y + 10   
     
-    texto(95, 215, f"Nº: {qr_code}", font_titulo)
-    texto(95, 275, f"Tipo: {tipo_peca}", font_normal)
-    texto(95, 320, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(95, 365, f"Responsável: {responsavel}", font_normal)
-    texto(95, 410, f"Data cadastro: {data_cadastro}", font_normal)
-    texto(95, 455, f"Status: {etapa_atual}", font_normal, cor=cor_etapa)
-    texto(95, 500, f"Data atualização: {data_atualizacao}", font_normal)
-    texto(95, 545, f"Atualizado por: {atualizado_por}", font_normal)
-    
+    y = 215
+    y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
+    y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
+    y = desenhar_texto(95, y, f"Cadastrado por: {cadastrado_por}", font_normal)
+    y = desenhar_texto(95, y, f"Responsável: {responsavel}", font_normal)
+    y = desenhar_texto(95, y, f"Data cadastro: {data_cadastro}", font_normal)
+    y = desenhar_texto(95, y, f"Status: {etapa_atual}", font_normal, cor=cor_etapa)
+    y = desenhar_texto(95, y, f"Data atualização: {data_atualizacao}", font_normal)
+    desenhar_texto(95, y, f"Atualizado por: {atualizado_por}", font_normal)
+
     return img
                      
    # ==================== CADASTRAR NOVA PEÇA ====================
