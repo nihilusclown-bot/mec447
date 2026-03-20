@@ -275,38 +275,33 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2800, 1600), color=cor_hex)
+    img = Image.new("RGB", (2900, 1750), color=cor_hex)
     draw = ImageDraw.Draw(img)
-        
-    try:
-        font_titulo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 220)
-        font_normal = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 130)
-        font_status = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 95)
-    except:
-        
-        try:
-            font_titulo = ImageFont.truetype("arial.ttf", 190)
-            font_normal = ImageFont.truetype("arial.ttf", 115)
-            font_status = ImageFont.truetype("arial.ttf", 85)
-        except:
-            font_titulo = font_normal = font_status = ImageFont.load_default()
     
-    qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
-    img.paste(qr_img, (1850, 380))
+    try:
+        font_path = "DejaVuSans-Bold.ttf"
+        font_titulo = ImageFont.truetype(font_path, 240)
+        font_normal = ImageFont.truetype(font_path, 135)
+        font_status = ImageFont.truetype(font_path, 100)
+    except:
+        font_titulo = font_normal = font_status = ImageFont.load_default()
+    
+    qr_img = criar_qr_pil(qr_code).resize((800, 800), Image.LANCZOS)
+    img.paste(qr_img, (1950, 420))
     
     def texto(x, y, texto, font):
-        draw.text((x+6, y+6), texto, font=font, fill="#111111")
+        draw.text((x+8, y+8), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
-      
+    
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 310, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 430, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 550, f"Responsável: {responsavel}", font_normal)
-    texto(120, 670, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 580, f"Responsável: {responsavel}", font_normal)
+    texto(120, 710, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 790, f"Status atual: {status_texto}", font_status)
-    texto(120, 910, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 840, f"Status atual: {status_texto}", font_status)
+    texto(120, 970, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
@@ -392,15 +387,13 @@ if menu == "➕ Cadastrar Nova Peça":
 elif menu == "🔄 Atualizar Status":
     st.header("Atualizar Status da Peça")
     
-    # Lista de peças não concluídas
     df_nao_concluidas = pd.read_sql("""
         SELECT qr_code, tipo_peca 
         FROM pecas 
         WHERE resultado IS NULL OR resultado = ''
         ORDER BY data_cadastro DESC
     """, conn)
-    
-    # Opções da barra única
+   
     opcoes = ["🔍 Digitar código manualmente"] + [
         f"{row['qr_code']} - {row['tipo_peca']}" 
         for _, row in df_nao_concluidas.iterrows()
@@ -580,15 +573,13 @@ elif menu == "📋 Lista de Peças":
 # ==================== HISTÓRICO POR PEÇA ====================
 elif menu == "📖 Histórico por Peça":
     st.header("Histórico Completo")
-    
-    # Peças em andamento
+        
     df_andamento = pd.read_sql("""
         SELECT qr_code, tipo_peca 
         FROM pecas 
         WHERE resultado IS NULL OR resultado = ''
     """, conn)
-    
-    # Peças concluídas
+      
     df_concluidas = pd.read_sql("""
         SELECT qr_code, tipo_peca 
         FROM pecas 
