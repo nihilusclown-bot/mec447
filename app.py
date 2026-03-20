@@ -280,43 +280,46 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     
     cor_etapa = CORES.get(etapa_atual, "#1E90FF")
     
+    # Aumentamos a altura da etiqueta para caber o logo maior
     largura, altura = 1150, 800
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
         
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
-   # ==================== LOGO ====================
-try:
-    logo_original = Image.open("inspmax_logo.png").convert("RGBA")
-    
-    # Aumentando a altura para deixar mais "cumprido" (teste 200, 220 ou 250)
-    nova_largura = 380
-    nova_altura = 220  # ← AQUI: aumente para mais alto (ex: 240 ou 260)
+    # ==================== LOGO MAIS CUMPRIDO  ====================
+    try:
+        logo_original = Image.open("inspmax_logo.png").convert("RGBA")
         
-    logo = logo_original.resize((nova_largura, nova_altura), Image.Resampling.LANCZOS)
-      
-    logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
-    logo_com_fundo_branco.paste(logo, (0, 0), logo)
+        nova_largura = 380
+        proporcao = logo_original.height / logo_original.width
+        nova_altura = int(nova_largura * proporcao)   
         
-    img.paste(logo_com_fundo_branco, (95, 20))  # ← Ajuste o 20 se quiser mover para cima/baixo
-except Exception as e:
-    # Fallback simples
-    draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
+        # Se quiser deixar AINDA MAIS alto (ex: 20% maior), descomente a linha abaixo:
+        # nova_altura = int(nova_altura * 1.25)
+        
+        logo = logo_original.resize((nova_largura, nova_altura), Image.Resampling.LANCZOS)
+        
+        logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
+        logo_com_fundo_branco.paste(logo, (0, 0), logo)
+        img.paste(logo_com_fundo_branco, (95, 20))
+        
+    except:
+        draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
 
-    # QR CODE
+    # ==================== QR CODE ====================
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
     img.paste(qr_img, (830, 200))
 
-    # FONTES
+    # ==================== FONTES ====================
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 40)
-        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 30)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 45)
+        font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
     except:
         font_titulo = font_normal = ImageFont.load_default()
 
-    # FUNÇÃO DE TEXTO COM QUEBRA AUTOMÁTICA
+    # ==================== FUNÇÃO DE TEXTO COM QUEBRA ====================
     def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura=720):
         if not texto.strip():
             return y_inicial + 10
@@ -340,7 +343,7 @@ except Exception as e:
             y += font.size + 12
         return y + 8
 
-    # TEXTOS
+    # ==================== TEXTOS ====================
     y = 260
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
     y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
