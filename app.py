@@ -146,9 +146,10 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
+    # ==================== LOGO DA EMPRESA (no topo da tela de login) ====================
     try:
         logo = Image.open("inspmax_logo.png")
-        st.image(logo, use_column_width=True)   
+        st.image(logo, use_column_width=True)
     except:
         st.title("InspMax")
     
@@ -179,8 +180,8 @@ if not st.session_state.user:
                 else:
                     st.error("Preencha todos os campos!")
 
-              # ====================== CADASTRO ======================
-    with tab_register:        
+    # ====================== CADASTRO ======================
+    with tab_register:
         if st.session_state.get("cadastro_sucesso", False):
             st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
             st.session_state.cadastro_sucesso = False
@@ -199,7 +200,6 @@ if not st.session_state.user:
                                      VALUES (?,?,?,?,?)""",
                                   (novo_nome, novo_email, nova_senha, funcao, None))
                         conn.commit()
-                        
                         st.session_state.cadastro_sucesso = True
                         st.rerun()   
                     except sqlite3.IntegrityError:
@@ -229,9 +229,16 @@ if not st.session_state.user:
             else:
                 st.error("E-mail ou nome não encontrado!")
 
-    st.stop()
+    st.stop()   # ← Para aqui e não executa o menu
 
-# ==================== MENU + ADMINISTRAÇÃO ====================
+# ==================== MENU + ADMINISTRAÇÃO (só aparece após login) ====================
+# ==================== LOGO NO SIDEBAR (em todas as páginas internas) ====================
+try:
+    logo_sidebar = Image.open("inspmax_logo.png")
+    st.sidebar.image(logo_sidebar, use_column_width=True)
+except:
+    st.sidebar.title("InspMax")
+
 st.sidebar.success(f"👤 {st.session_state.user['nome']} ({st.session_state.user.get('funcao', '—')})")
 if st.sidebar.button("🚪 Sair"):
     st.session_state.user = None
@@ -242,7 +249,6 @@ menu_options = [
     "📋 Lista de Peças", "🗑️ Gerenciar Peças", "📖 Histórico por Peça",
     "📈 Produtividade", "🖨️ Gerar Etiqueta"
 ]
-
 menu = st.sidebar.radio("Menu", menu_options, key="main_menu")
 
 # ==================== CONFIGURAÇÕES GLOBAIS ====================
