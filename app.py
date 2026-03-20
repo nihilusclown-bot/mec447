@@ -13,12 +13,10 @@ st.set_page_config(page_title="Controle de Peças QR", layout="wide")
 conn = sqlite3.connect("pecas.db", check_same_thread=False)
 c = conn.cursor()
 
-# Tabela de usuários
 c.execute('''CREATE TABLE IF NOT EXISTS users (
              id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT, 
              funcao TEXT, funcao_custom TEXT)''')
 
-# Tabela de peças 
 c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              qr_code TEXT PRIMARY KEY,
              tipo_peca TEXT,
@@ -30,9 +28,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              resultado TEXT,
              data_conclusao TEXT,
              responsavel_conclusao TEXT,
-             desenho_tecnico BLOB)''')   # ← nova coluna para a imagem
+             desenho_tecnico BLOB)''')   
 
-# Tabela de histórico
 c.execute('''CREATE TABLE IF NOT EXISTS historico (
              id INTEGER PRIMARY KEY,
              qr_code TEXT,
@@ -147,7 +144,7 @@ if not st.session_state.user:
                         conn.commit()
                         
                         st.session_state.cadastro_sucesso = True
-                        st.rerun()   # limpa os campos e mostra a mensagem
+                        st.rerun()   
                     except sqlite3.IntegrityError:
                         st.error("Esse nome ou e-mail já está cadastrado!")
                 else:
@@ -275,33 +272,33 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2900, 1750), color=cor_hex)
+    img = Image.new("RGB", (2800, 1700), color=cor_hex)  
     draw = ImageDraw.Draw(img)
     
     try:
         font_path = "DejaVuSans-Bold.ttf"
-        font_titulo = ImageFont.truetype(font_path, 145)   # reduzido
-        font_normal = ImageFont.truetype(font_path, 88)    # reduzido
-        font_status = ImageFont.truetype(font_path, 72)    # reduzido
+        font_titulo = ImageFont.truetype(font_path, 125)   r
+        font_normal = ImageFont.truetype(font_path, 82)    
+        font_status = ImageFont.truetype(font_path, 68)    
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
         
-    qr_img = criar_qr_pil(qr_code).resize((800, 800), Image.LANCZOS)
+    qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1950, 420))
-    
+        
     def texto(x, y, texto, font):
         draw.text((x+3, y+3), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
-    
+        
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 520, f"Responsável: {responsavel}", font_normal)
-    texto(120, 630, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 290, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 490, f"Responsável: {responsavel}", font_normal)
+    texto(120, 590, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 740, f"Status atual: {status_texto}", font_status)
-    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 690, f"Status atual: {status_texto}", font_status)
+    texto(120, 790, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
                      
@@ -408,7 +405,7 @@ elif menu == "🔄 Atualizar Status":
     if escolha == "🔍 Digitar código manualmente":
         qr_input = st.text_input("Digite o QR Code da peça manualmente")
     else:
-        qr_input = escolha.split(" - ")[0]   # pega automaticamente o código
+        qr_input = escolha.split(" - ")[0]   
     
     if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
