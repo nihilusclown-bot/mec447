@@ -228,27 +228,28 @@ if not st.session_state.user:
             else:
                 st.error("E-mail ou nome não encontrado!")
 
-    st.stop()  # ← ESSA LINHA É O QUE FAZ A MÁGICA
+    st.stop() 
 
-# ==================== MENU + SIDEBAR (só após login) ====================
-try:
-    logo_sidebar = Image.open("inspmax_logo.png")
-    st.sidebar.image(logo_sidebar, use_column_width=True)
-except:
-    st.sidebar.title("InspMax")
+# ==================== MENU + ADMINISTRAÇÃO  ====================
+else:   
+    try:
+        logo_sidebar = Image.open("inspmax_logo.png")
+        st.sidebar.image(logo_sidebar, use_column_width=True)
+    except:
+        st.sidebar.title("InspMax")
 
-st.sidebar.success(f"👤 {st.session_state.user['nome']} ({st.session_state.user.get('funcao', '—')})")
-if st.sidebar.button("🚪 Sair"):
-    st.session_state.user = None
-    st.rerun()
+    st.sidebar.success(f"👤 {st.session_state.user['nome']} ({st.session_state.user.get('funcao', '—')})")
+    if st.sidebar.button("🚪 Sair"):
+        st.session_state.user = None
+        st.rerun()
 
-menu_options = [
-    "📊 Dashboard Geral", "➕ Cadastrar Nova Peça", "🔄 Atualizar Status",
-    "📋 Lista de Peças", "🗑️ Gerenciar Peças", "📖 Histórico por Peça",
-    "📈 Produtividade", "🖨️ Gerar Etiqueta"
-]
-menu = st.sidebar.radio("Menu", menu_options, key="main_menu")
-
+    menu_options = [
+        "📊 Dashboard Geral", "➕ Cadastrar Nova Peça", "🔄 Atualizar Status",
+        "📋 Lista de Peças", "🗑️ Gerenciar Peças", "📖 Histórico por Peça",
+        "📈 Produtividade", "🖨️ Gerar Etiqueta"
+    ]
+    menu = st.sidebar.radio("Menu", menu_options, key="main_menu")
+  
 # ==================== CONFIGURAÇÕES GLOBAIS ====================
 APP_URL = "https://mec347.streamlit.app"
 
