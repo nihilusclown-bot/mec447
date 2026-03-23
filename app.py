@@ -42,13 +42,12 @@ c.execute('''CREATE TABLE IF NOT EXISTS historico (
              data TEXT,
              observacao TEXT)''')
 
-# Migração automática (roda só uma vez)
 try:
     c.execute("ALTER TABLE pecas ADD COLUMN cadastrado_por TEXT")
     conn.commit()
     print("✅ Coluna 'cadastrado_por' adicionada com sucesso!")
 except sqlite3.OperationalError:
-    pass  
+    pass 
 
 conn.commit()
 
@@ -414,16 +413,18 @@ if menu == "➕ Cadastrar Nova Peça":
     
     st.header("Cadastrar Nova Peça")
     
-    # Quem está cadastrando (sempre o usuário logado)
+    # Quem está cadastrando (sempre o usuário logado com cargo)
     cadastrado_por_full = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
     
+    # ==================== SELEÇÃO DO RESPONSÁVEL COM CARGO ====================
     if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
-        operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
-        responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
+        df_op = pd.read_sql("SELECT funcao, nome FROM users WHERE funcao = 'Operador'", conn)
+        op_options = [f"{row['funcao']} - {row['nome']}" for _, row in df_op.iterrows()]
+        responsavel_selecionado = st.selectbox("Operador responsável pela peça", op_options or ["Sem operador"], key="resp_cadastro")
     else:
         responsavel_selecionado = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
     
-    # ==================== TELA DE SUCESSO ====================
+    # ==================== TELA DE SUCESSO (AGORA CORRETA) ====================
     if st.session_state.get("mensagem_sucesso"):
         st.success(st.session_state.mensagem_sucesso)
         st.divider()
@@ -437,8 +438,8 @@ if menu == "➕ Cadastrar Nova Peça":
             img = gerar_etiqueta(
                 qr_code=qr,
                 tipo_peca=peca["tipo_peca"],
-                cadastrado_por=peca.get("cadastrado_por", cadastrado_por_full),  
-                responsavel=peca["responsavel"],                                 
+                cadastrado_por=peca["cadastrado_por"],      
+                responsavel=peca["responsavel"],            
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
                 data_atualizacao=peca["data_cadastro"],
