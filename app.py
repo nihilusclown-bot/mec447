@@ -581,7 +581,7 @@ elif menu == "🔄 Atualizar Status":
         else:
             st.error("QR Code não encontrado!")
 
-       # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
+           # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
