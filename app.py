@@ -586,7 +586,33 @@ elif menu == "🔄 Atualizar Status":
         if not df.empty:
             peca = df.iloc[0]
             
-            img = gerar
+            img = gerar_etiqueta(
+                qr_code=qr,
+                tipo_peca=peca["tipo_peca"],
+                cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
+                responsavel=peca["responsavel"],
+                data_cadastro=peca["data_cadastro"],
+                etapa_atual=peca["etapa"],
+                data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
+                atualizado_por=f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
+            )
+            
+            buf = io.BytesIO()
+            img.save(buf, format="PDF", resolution=300)
+            buf.seek(0)
+            st.download_button(
+                label="📄 **BAIXAR ETIQUETA ATUALIZADA**",
+                data=buf.getvalue(),
+                file_name=f"etiqueta_{qr}.pdf",
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True
+            )
+            
+            if st.button("🧹 Limpar e preparar nova atualização", type="secondary", use_container_width=True):
+                if "last_pdf" in st.session_state:
+                    del st.session_state.last_pdf
+                st.rerun()
               
 # ==================== GERENCIAR PEÇAS ====================
 elif menu == "🗑️ Gerenciar Peças":
