@@ -868,21 +868,47 @@ elif menu == "📈 Produtividade":
             st.dataframe(top_insp, use_container_width=True)
 
         # ====================== RANKING GERAL ======================
-        with tab_geral:
-            st.subheader("📊 Ranking Geral da Fábrica")
-            geral = pd.DataFrame({
-                'Métrica': ['Total de Peças Cadastradas', 'Em Inspeção Preliminar', 'Em Retrabalho/Não Conforme', 
-                           'Em Inspeção Final', 'Aprovadas', 'Reprovadas'],
-                'Quantidade': [
-                    len(df_filtrado[df_filtrado['status'] == 'Início']),
-                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Preliminar']),
-                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Retrabalho/Não Conforme']),
-                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Final']),
-                    len(df_filtrado[df_filtrado['status'] == 'Concluída']),
-                    len(df_filtrado[df_filtrado['status'] == 'Concluída'])
-                ]
-            })
-            st.dataframe(geral, use_container_width=True, hide_index=True)
+with tab_geral:
+    st.subheader("📊 Ranking Geral da Fábrica")
+    
+    # Query direta na tabela pecas (mais confiável)
+    df_pecas_periodo = pd.read_sql("""
+        SELECT resultado, etapa, data_cadastro 
+        FROM pecas 
+        WHERE resultado IS NOT NULL
+    """, conn)
+    
+    # Aplica filtro de período 
+    if periodo == "Mês Atual":
+        mes_atual = datetime.now().strftime("%Y-%m")
+        df_pecas_periodo = df_pecas_periodo[
+            df_pecas_periodo['data_cadastro'].str[:7] == mes_atual.replace('-', '/')
+        ]
+    elif periodo != "Acumulado do Ano" and periodo != "─":
+        df_pecas_periodo = df_pecas_periodo[
+            df_pecas_periodo['data_cadastro'].str[:7] == periodo.replace('-', '/')
+        ]
+    
+    geral = pd.DataFrame({
+        'Métrica': [
+            'Total de Peças Cadastradas',
+            'Em Inspeção Preliminar',
+            'Em Retrabalho/Não Conforme',
+            'Em Inspeção Final',
+            '✅ Aprovadas',
+            '❌ Reprovadas'
+        ],
+        'Quantidade': [
+            len(pd.read_sql("SELECT qr_code FROM pecas", conn)),  # total real cadastradas
+            len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Preliminar']),
+            len(df_filtrado[df_filtrado['etapa_atual'] == 'Retrabalho/Não Conforme']),
+            len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Final']),
+            len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Aprovado']),
+            len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Reprovado'])
+        ]
+    })
+    
+    st.dataframe(geral, use_container_width=True, hide_index=True)
 
 # ==================== GERAR ETIQUETA ====================
 elif menu == "🖨️ Gerar Etiqueta":
