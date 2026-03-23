@@ -52,13 +52,6 @@ except sqlite3.OperationalError:
 
 conn.commit()
 
-try:
-    c.execute("ALTER TABLE pecas ADD COLUMN cadastrado_por TEXT")
-    conn.commit()
-    print("✅ Coluna 'cadastrado_por' adicionada com sucesso!")
-except sqlite3.OperationalError:
-    pass  
-
 # ==================== USUÁRIO ADMIN ====================
 c.execute("SELECT nome FROM users WHERE nome='admin'")
 if not c.fetchone():
