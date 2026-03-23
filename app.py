@@ -887,30 +887,30 @@ elif menu == "🖨️ Gerar Etiqueta":
     st.header("Gerar Etiqueta Colorida")
     
     df_nao_concluidas = pd.read_sql("""
-        SELECT qr_code, tipo_peca 
-        FROM pecas 
+        SELECT qr_code, tipo_peca
+        FROM pecas
         WHERE resultado IS NULL OR resultado = ''
         ORDER BY data_cadastro DESC
     """, conn)
-      
+     
     opcoes = ["🔍 Digitar código manualmente"] + [
-        f"{row['qr_code']} - {row['tipo_peca']}" 
+        f"{row['qr_code']} - {row['tipo_peca']}"
         for _, row in df_nao_concluidas.iterrows()
     ]
-    
+   
     escolha = st.selectbox("Selecione a peça ou digite o código", opcoes)
-        
+       
     if escolha == "🔍 Digitar código manualmente":
         qr_input = st.text_input("Digite o QR Code da peça manualmente")
     else:
         qr_input = escolha.split(" - ")[0]
-    
+   
     if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
         if not df.empty:
             peca = df.iloc[0]
             
-                        if st.button("Gerar Etiqueta"):
+            if st.button("Gerar Etiqueta"):
                 img = gerar_etiqueta(
                     qr_code=qr_input,
                     tipo_peca=peca["tipo_peca"],
@@ -922,7 +922,7 @@ elif menu == "🖨️ Gerar Etiqueta":
                     atualizado_por=peca.get("responsavel", "—")
                 )
                 st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
-                
+               
                 buf = io.BytesIO()
                 img.save(buf, format="PDF", resolution=300)
                 buf.seek(0)
