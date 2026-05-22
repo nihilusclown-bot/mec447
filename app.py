@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import altair as alt
 
-st.set_page_config(page_title="InspMax", layout="wide")
+st.set_page_config(page_title="ALJ Inspeções", layout="wide")
 
 # ==================== BANCO DE DADOS ====================
 conn = sqlite3.connect("pecas.db", check_same_thread=False)
