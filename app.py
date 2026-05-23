@@ -236,7 +236,7 @@ if not st.session_state.user:
     st.stop()
 # ==================== MENU + SIDEBAR  ====================
 try:
-    logo_original = Image.open("ALJ Inspeções_logo.png").convert("RGB")
+    logo_original = Image.open("ALJ_Inspeções_logo.png").convert("RGB")
   
     logo_resized = logo_original.resize((255, 100), Image.Resampling.LANCZOS)
     st.sidebar.image(logo_resized)
@@ -348,7 +348,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         
     # ==================== LOGO  ====================
     try:
-        logo_original = Image.open("ALJ Inspeções_logo.png").convert("RGBA")
+        logo_original = Image.open("ALJ_Inspeções_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 200), Image.Resampling.LANCZOS)
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
         logo_com_fundo_branco.paste(logo, (0, 0), logo)
