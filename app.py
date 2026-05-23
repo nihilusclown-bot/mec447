@@ -146,7 +146,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    st.title("🛠️ InspMax - Login")
+    st.title("🛠️ ALJ Inspeções - Login")
     st.markdown("**Projeto Integrador MEC-4-47**")
     
     # ==================== LAYOUT COM VÍDEO PEQUENO ====================
@@ -236,12 +236,12 @@ if not st.session_state.user:
     st.stop()
 # ==================== MENU + SIDEBAR  ====================
 try:
-    logo_original = Image.open("inspmax_logo.png").convert("RGB")
+    logo_original = Image.open("ALJ Inspeções_logo.png").convert("RGB")
   
     logo_resized = logo_original.resize((255, 100), Image.Resampling.LANCZOS)
     st.sidebar.image(logo_resized)
 except:
-    st.sidebar.title("InspMax")
+    st.sidebar.title("ALJ Inspeções")
 
 st.sidebar.success(f"👤 {st.session_state.user['nome']} ({st.session_state.user.get('funcao', '—')})")
 if st.sidebar.button("🚪 Sair"):
@@ -348,13 +348,13 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         
     # ==================== LOGO  ====================
     try:
-        logo_original = Image.open("inspmax_logo.png").convert("RGBA")
+        logo_original = Image.open("ALJ Inspeções_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 200), Image.Resampling.LANCZOS)
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
         logo_com_fundo_branco.paste(logo, (0, 0), logo)
         img.paste(logo_com_fundo_branco, (95, 8))
     except:
-        draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
+        draw.text((100, 60), "ALJ Inspeções", fill="black", font=ImageFont.load_default())
 
     # ==================== QR CODE ====================
     qr_pil = criar_qr_pil(qr_code)
