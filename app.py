@@ -348,7 +348,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         
     # ==================== LOGO  ====================
     try:
-        logo_original = Image.open("ALJ_Inspeções_logo.png").convert("RGBA")
+        logo_original = Image.open("Logo_QR.png").convert("RGBA")
         logo = logo_original.resize((380, 200), Image.Resampling.LANCZOS)
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
         logo_com_fundo_branco.paste(logo, (0, 0), logo)
